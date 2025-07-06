@@ -24,7 +24,7 @@ mₖ xₖ₁ xₖ₂ ... xₖₘₖ
 
 Where:
 - `n` = total number of points,
-- `k` = number of categories (groups),
+- `k` = number of categories (sets),
 - Each of the following `k` lines contains the number of elements in a category and their coordinates.
 
 ## How to Run
