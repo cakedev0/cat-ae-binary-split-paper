@@ -14,13 +14,13 @@ This repository contains a C++ implementation of our piecewise binary split algo
 ## Input Format for C++ Executable
 
 The program expects input in the following format:
-$$
-n\  k\\
-m_1\  x_{1,1}\  x_{1,2}\  ... \ x_{1,m_1}\\
-m_2\  x_{2,1}\  x_{2,2}\  ... \ x_{2,m_2}\\
-...\\
-m_k \ x_{k,1}\  x_{k,2}\  ...\  x_{k,m_k}\\
-$$
+```
+n k
+m₁ x₁₁ x₁₂ ... x₁ₘ₁
+m₂ x₂₁ x₂₂ ... x₂ₘ₂
+...
+mₖ xₖ₁ xₖ₂ ... xₖₘₖ
+```
 
 Where:
 - `n` = total number of points,
