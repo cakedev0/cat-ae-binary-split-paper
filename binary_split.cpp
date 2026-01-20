@@ -147,6 +147,7 @@ vector<PiecewiseFunction> function_pool;
 
 //merge func_indices into base_func in range[v[l],v[r]]
 void merge_functions(PiecewiseFunction &res, const PiecewiseFunction &base_func, const vector<int> &func_indices, int left, int right) {
+    if (left > right) return;
     double last_slope;
     int pos;
 
