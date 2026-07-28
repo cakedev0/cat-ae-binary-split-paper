@@ -140,6 +140,27 @@ def _load_predict_droughts(path):
     return df
 
 
+def _load_synthetic_continuous(path):
+    # Synthetic, in-memory dataset (path is unused): a continuous target with no
+    # duplicate values at all, to see how our_solution's global sort+unique
+    # (coordinate compression) behaves when there's no real-world target-value
+    # duplication for it to exploit, unlike every other dataset in this registry
+    # (see target_cardinality.md).
+    rng = np.random.default_rng(0)
+    n = 1_000_000
+    value = rng.normal(size=n)
+    dup = pd.Series(value).duplicated(keep=False)
+    while dup.any():
+        value[dup.to_numpy()] = rng.normal(size=int(dup.sum()))
+        dup = pd.Series(value).duplicated(keep=False)
+    return pd.DataFrame({
+        'cat_10': rng.integers(0, 10, size=n),
+        'cat_100': rng.integers(0, 100, size=n),
+        'cat_1000': rng.integers(0, 1000, size=n),
+        'value': value,
+    })
+
+
 # Registry of datasets used in the paper. Each entry names the OpenML/Kaggle source,
 # how to load it, and which feature/target columns to run the binary split on.
 DATASETS = {
@@ -187,6 +208,15 @@ DATASETS = {
         group_by_feature=['TS', 'WS10M', 'QV2M', 'T2M_RANGE'],
         target_feature='score',
     ),
+    'synthetic_continuous': dict(
+        test_name='synthetic_continuous',
+        # 1M rows, 3 categorical features (10/100/1000 categories), continuous
+        # duplicate-free target -- the opposite extreme from every real dataset
+        # above, all of which have substantial target-value duplication.
+        loader=_load_synthetic_continuous, path=None,
+        group_by_feature=['cat_10', 'cat_100', 'cat_1000'],
+        target_feature='value',
+    ),
 }
 
 DATASETS_TO_RUN = [
@@ -197,6 +227,7 @@ DATASETS_TO_RUN = [
     'delays_zurich_transport',
     'wine',
     'predict_droughts',
+    'synthetic_continuous',
 ]
 
 
