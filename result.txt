@@ -1,105 +1,125 @@
 feature: carat, data size: 53940, categories: 273
-sklearn time: 0.037145376205444336, result: 87802482.0
-our time: 0.019410598, result: 87802482.0
-lightgbm time: 0.017004966735839844, result: 141775066.2
+sklearn time: 0.03671765327453613, result: 87802482.0
+our time: 0.019803714, result: 87802482.0
+lightgbm time: 0.01711869239807129, result: 141775066.20000002
 
 feature: color, data size: 53940, categories: 7
-sklearn time: 0.03251051902770996, result: 148530357.0
-our time: 0.006069751, result: 148530357.0
-lightgbm time: 0.01055908203125, result: 150884656.39999998
+sklearn time: 0.03195953369140625, result: 148530357.0
+our time: 0.006271834, result: 148530357.0
+lightgbm time: 0.010627269744873047, result: 150884656.4
 
 feature: table, data size: 53940, categories: 127
-sklearn time: 0.03279423713684082, result: 148378339.0
-our time: 0.008521265, result: 148351023.0
-lightgbm time: 0.012500286102294922, result: 150926264.0
+sklearn time: 0.0317995548248291, result: 148378339.0
+our time: 0.008243886, result: 148351023.0
+lightgbm time: 0.012110233306884766, result: 150926264.0
 
 feature: x, data size: 53940, categories: 554
-sklearn time: 0.0376286506652832, result: 87971451.0
-our time: 0.023622299, result: 87971451.0
-lightgbm time: 0.020952224731445312, result: 141583702.5
+sklearn time: 0.0373690128326416, result: 87971451.0
+our time: 0.021098879, result: 87971451.0
+lightgbm time: 0.014147520065307617, result: 141583702.5
 
 feature: MWG, data size: 5100000, categories: 5
-sklearn time: 10.93164587020874, result: 818613159.36
-our time: 0.421077505, result: 818613159.3600812
-lightgbm time: 1.5276310443878174, result: 886559369.096766
+sklearn time: 10.411948919296265, result: 818613159.36
+our time: 0.437661689, result: 818613159.3600812
+lightgbm time: 1.550046443939209, result: 886559369.0967659
 
 feature: MDIMC, data size: 5100000, categories: 7
-sklearn time: 12.382513284683228, result: 890893240.9599999
-our time: 0.216498887, result: 890893240.9601057
-lightgbm time: 1.4937293529510498, result: 899579161.8620572
+sklearn time: 11.23655891418457, result: 890893240.96
+our time: 0.222997209, result: 890893240.9601057
+lightgbm time: 1.5412585735321045, result: 899579161.8620572
 
 feature: NWG, data size: 5100000, categories: 6
-sklearn time: 11.861607789993286, result: 859338262.72
-our time: 0.372227694, result: 859338262.7201198
-lightgbm time: 1.597970724105835, result: 896767230.1170933
+sklearn time: 10.52977442741394, result: 859338262.7199999
+our time: 0.37184019, result: 859338262.7201198
+lightgbm time: 1.6254985332489014, result: 896767230.1170933
 
 feature: sqft_living, data size: 21613, categories: 1038
-sklearn time: 0.018850326538085938, result: 3990491846.0
-our time: 0.007587382, result: 3989925792.0
-lightgbm time: 0.012575864791870117, result: 4665266803.0
+sklearn time: 0.018512725830078125, result: 3990491846.0
+our time: 0.007632856, result: 3989925792.0
+lightgbm time: 0.01235342025756836, result: 4665266803.0
 
 feature: zipcode, data size: 21613, categories: 70
-sklearn time: 0.014011859893798828, result: 3846540122.0
-our time: 0.006272032, result: 3845312848.0
-lightgbm time: 0.007427215576171875, result: 4620819190.0
+sklearn time: 0.013552665710449219, result: 3846540122.0
+our time: 0.005654833, result: 3845312848.0
+lightgbm time: 0.006755352020263672, result: 4620819190.0
 
 feature: sqft_above, data size: 21613, categories: 946
-sklearn time: 0.01773977279663086, result: 4198812714.0
-our time: 0.007170525, result: 4197924964.0
-lightgbm time: 0.012431144714355469, result: 4699858690.0
+sklearn time: 0.018522977828979492, result: 4198812714.0
+our time: 0.007154481, result: 4197924964.0
+lightgbm time: 0.010539054870605469, result: 4699858690.0
 
 feature: ZN, data size: 506, categories: 26
-sklearn time: 0.0013129711151123047, result: 2892.2
-our time: 0.000161633, result: 2889.6
-lightgbm time: 0.004118442535400391, result: 3237.179990005493
+sklearn time: 0.001493692398071289, result: 2892.2
+our time: 0.000161234, result: 2889.6
+lightgbm time: 0.0042476654052734375, result: 3237.179990005493
 
 feature: INDUS, data size: 506, categories: 76
-sklearn time: 0.001211404800415039, result: 2497.8999999999996
-our time: 0.000264133, result: 2497.9
-lightgbm time: 0.0030694007873535156, result: 3167.370001411438
+sklearn time: 0.001241922378540039, result: 2497.8999999999996
+our time: 0.000265075, result: 2497.9
+lightgbm time: 0.002341032028198242, result: 3167.3700014114384
 
 feature: DIS, data size: 506, categories: 412
-sklearn time: 0.002911806106567383, result: 2283.7
-our time: 0.000397148, result: 2283.7
-lightgbm time: 0.00413203239440918, result: 3119.7299972534183
+sklearn time: 0.002877473831176758, result: 2283.7
+our time: 0.000402824, result: 2283.7
+lightgbm time: 0.004869222640991211, result: 3119.7299972534183
 
 feature: windspeed_avg, data size: 5465575, categories: 66
-sklearn time: 9.334110260009766, result: 335188864.0
-our time: 0.228335216, result: 335153576.0
-lightgbm time: 0.7061235904693604, result: 335287625.0
+sklearn time: 9.288105726242065, result: 335188864.0
+our time: 0.2270872, result: 335153576.0
+lightgbm time: 0.8115253448486328, result: 335287625.0
 
 feature: temp, data size: 5465575, categories: 143
-sklearn time: 10.133030891418457, result: 334729238.0
-our time: 0.22313399, result: 334662955.0
-lightgbm time: 0.7395663261413574, result: 335200789.6
+sklearn time: 9.714609384536743, result: 334729238.0
+our time: 0.22486464, result: 334662955.0
+lightgbm time: 0.7397458553314209, result: 335200789.6
 
 feature: stop_id, data size: 5465575, categories: 1530
-sklearn time: 9.968599081039429, result: 325798202.0
-our time: 0.251701695, result: 325792384.0
-lightgbm time: 0.682074785232544, result: 333595055.9
+sklearn time: 10.082348823547363, result: 325798202.0
+our time: 0.258115325, result: 325792384.0
+lightgbm time: 0.6520929336547852, result: 333595055.9
 
 feature: time, data size: 5465575, categories: 3526
-sklearn time: 10.256153345108032, result: 330028785.0
-our time: 0.287179985, result: 330024049.0
-lightgbm time: 0.6986064910888672, result: 334364972.1
+sklearn time: 9.39042067527771, result: 330028785.0
+our time: 0.283343673, result: 330024049.0
+lightgbm time: 0.6957957744598389, result: 334364972.1
 
 feature: fixed acidity, data size: 1143, categories: 91
-sklearn time: 0.0016772747039794922, result: 647.0
-our time: 0.00012999, result: 640.0
-lightgbm time: 0.0033719539642333984, result: 738.8000000000001
+sklearn time: 0.0017733573913574219, result: 647.0
+our time: 0.000116034, result: 640.0
+lightgbm time: 0.0047397613525390625, result: 738.8
 
 feature: density, data size: 1143, categories: 388
-sklearn time: 0.002749204635620117, result: 510.0
-our time: 0.000193105, result: 510.0
-lightgbm time: 0.00481104850769043, result: 718.9000000000001
+sklearn time: 0.0027205944061279297, result: 510.0
+our time: 0.000190576, result: 510.0
+lightgbm time: 0.003963470458984375, result: 718.9000000000001
 
 feature: volatile acidity, data size: 1143, categories: 135
-sklearn time: 0.0016984939575195312, result: 591.0
-our time: 0.000132648, result: 586.0
-lightgbm time: 0.0026493072509765625, result: 726.4000000000001
+sklearn time: 0.0015187263488769531, result: 591.0
+our time: 0.00012949, result: 586.0
+lightgbm time: 0.002960205078125, result: 726.4000000000001
 
 feature: citric acid, data size: 1143, categories: 77
-sklearn time: 0.0014727115631103516, result: 636.0
-our time: 0.000117675, result: 634.0
-lightgbm time: 0.002288341522216797, result: 736.2
+sklearn time: 0.0014123916625976562, result: 636.0
+our time: 0.000108911, result: 634.0
+lightgbm time: 0.002137899398803711, result: 736.2
+
+feature: TS, data size: 19300680, categories: 7588
+sklearn time: 30.542368173599243, result: 15578253.866799999
+our time: 0.786539133, result: 15578246.186799927
+lightgbm time: 2.77412486076355, result: 15871015.546419501
+
+feature: WS10M, data size: 19300680, categories: 1740
+sklearn time: 32.28942346572876, result: 15915831.0894
+our time: 0.678954619, result: 15915830.994398667
+lightgbm time: 2.8030052185058594, result: 15915947.0638
+
+feature: QV2M, data size: 19300680, categories: 2210
+sklearn time: 33.37830448150635, result: 15915738.247200001
+our time: 0.682929417, result: 15915738.2471999
+lightgbm time: 2.897073745727539, result: 15915919.916429192
+
+feature: T2M_RANGE, data size: 19300680, categories: 3029
+sklearn time: 31.175358295440674, result: 15514388.7224
+our time: 0.71753512, result: 15514386.44679999
+lightgbm time: 2.703907012939453, result: 15862704.856510011
 

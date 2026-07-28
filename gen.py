@@ -128,6 +128,18 @@ def _load_csv(path):
     return pd.read_csv(path)
 
 
+def _load_predict_droughts(path):
+    # score (the US Drought Monitor severity label) is only recorded weekly, so most
+    # daily rows have a missing value. Forward/backward-fill it per county (fips) to
+    # label every day, which recovers the paper's full row count (19,300,680) instead
+    # of dropping to the ~2.76M rows that have a directly-observed score.
+    df = pd.read_csv(path)
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values(['fips', 'date'])
+    df['score'] = df.groupby('fips')['score'].transform(lambda s: s.ffill().bfill())
+    return df
+
+
 # Registry of datasets used in the paper. Each entry names the OpenML/Kaggle source,
 # how to load it, and which feature/target columns to run the binary split on.
 DATASETS = {
@@ -169,16 +181,14 @@ DATASETS = {
     ),
     'predict_droughts': dict(
         test_name='predict_droughts',
-        # Kaggle cdminix/us-drought-meteorological-data. Not bundled in the repo (needs
-        # a manual download + Kaggle credentials); target column unverified against the
-        # actual file. Left out of DATASETS_TO_RUN.
-        loader=_load_csv, path='predict_droughts.csv',
+        # Kaggle cdminix/us-drought-meteorological-data, train_timeseries.csv only
+        # (matches the paper's row count exactly; test/validation splits aren't used).
+        loader=_load_predict_droughts, path='train_timeseries/train_timeseries.csv',
         group_by_feature=['TS', 'WS10M', 'QV2M', 'T2M_RANGE'],
         target_feature='score',
     ),
 }
 
-# Datasets to run in main(). Excludes predict_droughts (see note above).
 DATASETS_TO_RUN = [
     'diamonds',
     'gpu_kernel_performance',
@@ -186,6 +196,7 @@ DATASETS_TO_RUN = [
     'boston',
     'delays_zurich_transport',
     'wine',
+    'predict_droughts',
 ]
 
 

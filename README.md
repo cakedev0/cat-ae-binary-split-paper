@@ -62,15 +62,17 @@ filenames below, then set `DATASETS_TO_RUN` in `gen.py` accordingly.
 | `boston`                   | `dataset_531.arff`   | OpenML 531   | `curl -L "https://openml.org/data/v1/download/52643/boston.arff" -o dataset_531.arff` |
 | `delays_zurich_transport`  | `dataset_40753.arff` | OpenML 40753 | `curl -L "https://openml.org/data/v1/download/5698591/delays_zurich_transport.arff" -o dataset_40753.arff` |
 | `wine`                     | `WineQT.csv`          | Kaggle [yasserh/wine-quality-dataset](https://www.kaggle.com/datasets/yasserh/wine-quality-dataset) | `kaggle datasets download -d yasserh/wine-quality-dataset -p . --unzip` (requires a [Kaggle API token](https://www.kaggle.com/docs/api)) |
-| `predict_droughts`         | `predict_droughts.csv` (not verified) | Kaggle [cdminix/us-drought-meteorological-data](https://www.kaggle.com/datasets/cdminix/us-drought-meteorological-data) | not wired up — target column is a guess; download and adjust `DATASETS['predict_droughts']` in `gen.py` before use |
+| `predict_droughts`         | `train_timeseries/train_timeseries.csv` | Kaggle [cdminix/us-drought-meteorological-data](https://www.kaggle.com/datasets/cdminix/us-drought-meteorological-data) | `kaggle datasets download -d cdminix/us-drought-meteorological-data -p . --unzip` (requires a [Kaggle API token](https://www.kaggle.com/docs/api)); only `train_timeseries/train_timeseries.csv` is used, `test_timeseries/`, `validation_timeseries/` and `soil_data.csv` can be deleted |
 
 Notes:
 - `delays_zurich_transport` (OpenML 40753) has string-typed columns that
   `scipy.io.arff.loadarff` can't parse; `gen.py` handles this automatically via a small
   hand-rolled ARFF header parser (`_load_arff_mixed`), no manual CSV conversion needed.
-- `predict_droughts` is excluded from `DATASETS_TO_RUN` by default: it's large
-  (19.3M rows), Kaggle-hosted, and its target column hasn't been verified against the
-  actual file.
+- `predict_droughts`'s target (`score`, the US Drought Monitor severity label) is only
+  recorded weekly, so most daily rows are missing it. `gen.py` forward/backward-fills it
+  per county (`fips`) via `_load_predict_droughts`, which recovers the paper's full row
+  count (19,300,680) instead of dropping to the ~2.76M rows with a directly-observed
+  score. This filling strategy is inferred, not stated in the paper.
 
 ## How to Run
 

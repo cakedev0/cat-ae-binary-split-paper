@@ -2,7 +2,11 @@
 dataset_*.arff
 WineQT.csv
 wine.zip
-predict_droughts.csv
+drought.zip
+soil_data.csv
+train_timeseries/
+test_timeseries/
+validation_timeseries/
 
 # Scratch files produced by running gen.py
 cpp_result.txt
