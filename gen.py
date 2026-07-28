@@ -1,7 +1,8 @@
-import numpy as np 
+import numpy as np
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 import os
 import random
+import re
 import matplotlib.pyplot as plt
 import lightgbm as lgb
 from sklearn.tree import DecisionTreeRegressor
@@ -17,19 +18,24 @@ def sklearn_solution(S, N):
     # Compute the solution using sklearn's DecisionTreeRegressor for a given set S with N elements.
     # Returns the minimum Mean Absolute Error (MAE) and the computation time.
 
-    if N > 100000:  # If the dataset is too large for sklearn, return 0 and time set to 1000s.
-        return 0, 1000
+    start = time.time()
+    # Native categorical split support (sklearn nightly, >=1.10) finds the optimal
+    # grouping of categories directly, so no need to pre-sort categories by median.
+    # It caps out at 255 categories though, so fall back to the median-sorted
+    # ordinal encoding trick for higher-cardinality features.
+    if len(S) <= 255:
+        X = np.repeat(np.arange(len(S)), list(map(len, S)))[:, np.newaxis]
+        y = np.hstack(S)
+        model = DecisionTreeRegressor(max_depth=1, criterion='absolute_error', categorical_features=[0])
     else:
-        # Use sklearn DecisionTreeRegressor with depth=1 and absolute error loss
-        start = time.time()
         S = sorted(S, key=np.median)
         X = np.repeat(np.arange(len(S)), list(map(len, S)))[:, np.newaxis]
         y = np.hstack(S)
         model = DecisionTreeRegressor(max_depth=1, criterion='absolute_error')
-        model.fit(X, y)
-        ans = np.sum(np.abs(y - model.predict(X)))
-        duration = time.time() - start
-        return ans, duration
+    model.fit(X, y)
+    ans = np.sum(np.abs(y - model.predict(X)))
+    duration = time.time() - start
+    return ans, duration
 
 def lightgbm_solution(S, N):
     # Compute solution using LightGBM with single decision stump (max_depth=1, num_leaves=2).
@@ -67,7 +73,7 @@ def our_solution(S, N):
         print(file=input_file)
     input_file.close()
 
-    os.system("binary_split.exe < tmp_data.txt")
+    os.system("./binary_split.exe < tmp_data.txt")
     with open('cpp_result.txt', 'r') as f:
         for line in f:
             numbers = line.split()
@@ -95,20 +101,102 @@ def benchmark(S, cases, N, K, feature_name):
 
 
 
-def load_data():
-    #data = pd.read_csv('dataset_40753.csv')  # Input CSV file
-    data, meta = arff.loadarff('dataset_42225.arff')  # Input ARFF file
-    #print(len(data))
-    df = pd.DataFrame(data)
+def _load_arff(path):
+    # Plain numeric ARFF, readable directly with scipy.
+    data, meta = arff.loadarff(path)
+    return pd.DataFrame(data)
 
-    # Features to group by
-    group_by_feature = ['carat','color','table','x']
-    target_feature = 'price'  # Target variable
+
+def _load_arff_mixed(path):
+    # ARFF files with string-typed attributes (e.g. delays_zurich_transport) trip up
+    # scipy.io.arff.loadarff. Everything after @data is plain CSV though, so parse the
+    # attribute names by hand and hand the rest to pandas.
+    names = []
+    header_lines = 0
+    with open(path, 'r') as f:
+        for line in f:
+            header_lines += 1
+            if line.strip().lower().startswith('@data'):
+                break
+            m = re.match(r"@attribute\s+'?([^'\s]+)'?\s", line, re.IGNORECASE)
+            if m:
+                names.append(m.group(1))
+    return pd.read_csv(path, skiprows=header_lines, header=None, names=names, low_memory=False)
+
+
+def _load_csv(path):
+    return pd.read_csv(path)
+
+
+# Registry of datasets used in the paper. Each entry names the OpenML/Kaggle source,
+# how to load it, and which feature/target columns to run the binary split on.
+DATASETS = {
+    'diamonds': dict(
+        test_name='diamonds_42225',
+        loader=_load_arff, path='dataset_42225.arff',  # OpenML 42225
+        group_by_feature=['carat', 'color', 'table', 'x'],
+        target_feature='price',
+    ),
+    'gpu_kernel_performance': dict(
+        test_name='gpu_kernel_performance_45662',
+        loader=_load_arff, path='dataset_45662.arff',  # OpenML 45662
+        group_by_feature=['MWG', 'MDIMC', 'NWG'],
+        target_feature='Run1',
+    ),
+    'house_sales': dict(
+        test_name='house_sales_42731',
+        loader=_load_arff, path='dataset_42731.arff',  # OpenML 42731
+        group_by_feature=['sqft_living', 'zipcode', 'sqft_above'],
+        target_feature='price',
+    ),
+    'boston': dict(
+        test_name='boston_531',
+        loader=_load_arff, path='dataset_531.arff',  # OpenML 531
+        group_by_feature=['ZN', 'INDUS', 'DIS'],
+        target_feature='MEDV',
+    ),
+    'delays_zurich_transport': dict(
+        test_name='delays_zurich_transport_40753',
+        loader=_load_arff_mixed, path='dataset_40753.arff',  # OpenML 40753
+        group_by_feature=['windspeed_avg', 'temp', 'stop_id', 'time'],
+        target_feature='delay',
+    ),
+    'wine': dict(
+        test_name='wine_quality',
+        loader=_load_csv, path='WineQT.csv',  # Kaggle yasserh/wine-quality-dataset
+        group_by_feature=['fixed acidity', 'density', 'volatile acidity', 'citric acid'],
+        target_feature='quality',
+    ),
+    'predict_droughts': dict(
+        test_name='predict_droughts',
+        # Kaggle cdminix/us-drought-meteorological-data. Not bundled in the repo (needs
+        # a manual download + Kaggle credentials); target column unverified against the
+        # actual file. Left out of DATASETS_TO_RUN.
+        loader=_load_csv, path='predict_droughts.csv',
+        group_by_feature=['TS', 'WS10M', 'QV2M', 'T2M_RANGE'],
+        target_feature='score',
+    ),
+}
+
+# Datasets to run in main(). Excludes predict_droughts (see note above).
+DATASETS_TO_RUN = [
+    'diamonds',
+    'gpu_kernel_performance',
+    'house_sales',
+    'boston',
+    'delays_zurich_transport',
+    'wine',
+]
+
+
+def load_data(dataset_key):
+    cfg = DATASETS[dataset_key]
+    df = cfg['loader'](cfg['path'])
 
     S = []
-    for feature in group_by_feature:
+    for feature in cfg['group_by_feature']:
         grouped = df.groupby(feature)
-        S.append([feature, [group[target_feature].tolist() for group_name, group in grouped if not group.empty]])
+        S.append([feature, [group[cfg['target_feature']].tolist() for group_name, group in grouped if not group.empty]])
     return S
 
 
@@ -227,13 +315,15 @@ def draw_table(list_n, list_k, sklearn_ans, sklearn_time, our_ans, our_time, lig
     df.to_excel(f'feature_{test_name}.xlsx', index=False)
 
 
-def draw_feature_table(feature_name, list_n, list_k, sklearn_ans, sklearn_time, our_ans, our_time, lightgbm_time, lightgbm_ans):
-    
+def draw_feature_table(feature_name, list_n, list_k, sklearn_ans, sklearn_time, our_ans, our_time, lightgbm_time, lightgbm_ans, test_name, dataset_name=None):
+
     # Generates a summary table comparing the performance of sklearn, LightGBM, and our custom method across multiple features on the full dataset.
     # The table includes running time and accuracy metrics for each method, and is saved as both a Markdown file and an Excel file named after the dataset.
-    
-    test_name = "diamonds_42225"  # Name of the dataset used for testing
-    data = {
+
+    data = {}
+    if dataset_name is not None:
+        data["dataset"] = dataset_name
+    data.update({
         "feature": feature_name,
         "n": list_n,
         "k": list_k,
@@ -243,7 +333,7 @@ def draw_feature_table(feature_name, list_n, list_k, sklearn_ans, sklearn_time, 
         "lightgbm Accuracy": lightgbm_ans,
         "our Time": our_time,
         "our Result": our_ans,
-    }
+    })
     df = pd.DataFrame(data)
     for col in ["n", "k"]:
         df[col] = df[col].astype(str)
@@ -262,12 +352,11 @@ def draw_feature_table(feature_name, list_n, list_k, sklearn_ans, sklearn_time, 
     df.to_excel(f'{test_name}.xlsx', index=False)
 
 
-# Entry point of the script. Loads data, runs experiments, and saves summary results.
-def main():
-    seed = int(time.time())
-    np.random.seed(seed)
-    test_case = 0
-    test_set = load_data()
+def run_dataset(dataset_key):
+    # Runs the benchmark for every group_by_feature of a single dataset from the
+    # DATASETS registry. Returns the per-feature result lists (including the dataset
+    # key repeated for each row, for combining across datasets).
+    test_set = load_data(dataset_key)
     feature_name = []
     list_n = []
     list_k = []
@@ -278,7 +367,6 @@ def main():
     lightgbm_time = []
     lightgbm_ans = []
     for name, preS in test_set:
-        test_case += 1
         NN = sum(len(ss) for ss in preS)
 
         #now_n = [NN*i//10 for i in range(1,11)]
@@ -304,7 +392,30 @@ def main():
         #draw_figure(list_n,sklearn_time,our_time,lightgbm_time,name)
         #draw_table(list_n,list_k,sklearn_ans,sklearn_time,our_ans,our_time,lightgbm_time,lightgbm_ans,name)
         #plt.show()
-    draw_feature_table(feature_name, list_n, list_k, sklearn_ans, sklearn_time, our_ans, our_time, lightgbm_time, lightgbm_ans)
+
+    test_name = DATASETS[dataset_key]['test_name']
+    draw_feature_table(feature_name, list_n, list_k, sklearn_ans, sklearn_time, our_ans, our_time, lightgbm_time, lightgbm_ans, test_name)
+    dataset_name = [dataset_key] * len(feature_name)
+    return dataset_name, feature_name, list_n, list_k, sklearn_ans, sklearn_time, our_ans, our_time, lightgbm_time, lightgbm_ans
+
+
+# Entry point of the script. Loads data, runs experiments, and saves summary results.
+def main():
+    seed = int(time.time())
+    np.random.seed(seed)
+
+    combined = [[] for _ in range(10)]
+    for dataset_key in DATASETS_TO_RUN:
+        for combined_list, values in zip(combined, run_dataset(dataset_key)):
+            combined_list.extend(values)
+
+    # Sort by decreasing sample size, matching the paper's Table 2 ordering. A stable
+    # sort keeps features within the same dataset in their original (registry) order.
+    order = sorted(range(len(combined[2])), key=lambda i: -combined[2][i])
+    combined = [[lst[i] for i in order] for lst in combined]
+
+    dataset_name, feature_name, list_n, list_k, sklearn_ans, sklearn_time, our_ans, our_time, lightgbm_time, lightgbm_ans = combined
+    draw_feature_table(feature_name, list_n, list_k, sklearn_ans, sklearn_time, our_ans, our_time, lightgbm_time, lightgbm_ans, "table2_reproduction", dataset_name=dataset_name)
 
 
 if __name__ == "__main__":

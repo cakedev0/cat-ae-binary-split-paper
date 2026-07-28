@@ -1,15 +1,27 @@
 # Binary Split
 
-This repository contains a C++ implementation of our piecewise binary split algorithm, along with a Python script for running experiments and comparing against standard baselines.
+This repository accompanies the paper *"Binary Split Categorical feature with Mean
+Absolute Error Criteria in CART"* (`paper.pdf`). It contains a C++ implementation of the
+paper's exact MAE binary-split algorithm, along with a Python script that reproduces the
+paper's experiments (Table 2) against scikit-learn and LightGBM baselines.
+
+**Note on this version:** the paper's own experiments predate scikit-learn's native
+categorical-feature support and compare against a manual median-encoding trick (the
+"heuristic" discussed in the paper, `O(n^2)` and not guaranteed optimal). This repo has
+been updated to instead use `DecisionTreeRegressor(categorical_features=...)`, added in
+scikit-learn nightly (>=1.10.dev), which searches for the optimal categorical grouping
+directly rather than through an encoding. It caps out at 255 categories, so features
+above that still fall back to the median-sorted ordinal encoding. See `gen.py`'s
+`sklearn_solution` for details.
 
 ## File Overview
 
-- `binary_split.cpp`: C++ implementation of our algorithm.
+- `binary_split.cpp`: C++ implementation of the paper's algorithm.
 - `gen.py`: Python script to:
-  - Load and preprocess data,
-  - Run our algorithm via the compiled C++ executable,
+  - Load and preprocess each dataset from the paper (see `DATASETS` registry),
+  - Run the algorithm via the compiled C++ executable,
   - Execute scikit-learn and LightGBM baselines,
-  - Collect and format results.
+  - Collect and format results, per-dataset and combined.
 
 ## Input Format for C++ Executable
 
@@ -27,17 +39,45 @@ Where:
 - `k` = number of categories (sets),
 - Each of the following `k` lines contains the number of elements in a category and their coordinates.
 
+## Building the C++ Executable
+
+The checked-in `binary_split.exe` is a Linux ELF binary (recompiled from Windows PE).
+Rebuild it with:
+
+```bash
+g++ -O2 -std=c++17 -o binary_split.exe binary_split.cpp
+```
+
+## Datasets
+
+Datasets are **not** committed to this repo (only `dataset_42225.arff` ships as a small
+example). Download the ones you want to run and place them in the repo root under the
+filenames below, then set `DATASETS_TO_RUN` in `gen.py` accordingly.
+
+| `DATASETS` key            | File to save as   | Source | Download |
+|---------------------------|--------------------|--------|----------|
+| `diamonds`                 | `dataset_42225.arff` (included) | OpenML 42225 | already in repo |
+| `gpu_kernel_performance`   | `dataset_45662.arff` | OpenML 45662 | `curl -L "https://openml.org/data/v1/download/22117147/simulated_sgemm_gpu_kernel_performance.arff" -o dataset_45662.arff` |
+| `house_sales`              | `dataset_42731.arff` | OpenML 42731 | `curl -L "https://openml.org/data/v1/download/22044765/house_sales.arff" -o dataset_42731.arff` |
+| `boston`                   | `dataset_531.arff`   | OpenML 531   | `curl -L "https://openml.org/data/v1/download/52643/boston.arff" -o dataset_531.arff` |
+| `delays_zurich_transport`  | `dataset_40753.arff` | OpenML 40753 | `curl -L "https://openml.org/data/v1/download/5698591/delays_zurich_transport.arff" -o dataset_40753.arff` |
+| `wine`                     | `WineQT.csv`          | Kaggle [yasserh/wine-quality-dataset](https://www.kaggle.com/datasets/yasserh/wine-quality-dataset) | `kaggle datasets download -d yasserh/wine-quality-dataset -p . --unzip` (requires a [Kaggle API token](https://www.kaggle.com/docs/api)) |
+| `predict_droughts`         | `predict_droughts.csv` (not verified) | Kaggle [cdminix/us-drought-meteorological-data](https://www.kaggle.com/datasets/cdminix/us-drought-meteorological-data) | not wired up — target column is a guess; download and adjust `DATASETS['predict_droughts']` in `gen.py` before use |
+
+Notes:
+- `delays_zurich_transport` (OpenML 40753) has string-typed columns that
+  `scipy.io.arff.loadarff` can't parse; `gen.py` handles this automatically via a small
+  hand-rolled ARFF header parser (`_load_arff_mixed`), no manual CSV conversion needed.
+- `predict_droughts` is excluded from `DATASETS_TO_RUN` by default: it's large
+  (19.3M rows), Kaggle-hosted, and its target column hasn't been verified against the
+  actual file.
+
 ## How to Run
 
-1. Place the dataset file (default: `.arff`), `gen.py`, and `binary_split.exe` in the same directory.
-2. Open `gen.py` and modify the following lines as needed:
-   - **Line 100**: Change the dataset filename.
-   - **Line 105**: Define feature column names.
-   - **Line 106**: Set the target column name.
-   - **Line 235**: Specify the output result file name.
-   - If the dataset format is not `.arff`, you also need to modify the read function at **line 100**.
-
-We have included the dataset **ID 42225** in the repository as an example. You can directly run:
+1. Download the datasets you want (see table above) into the repo root.
+2. Build `binary_split.exe` (see above).
+3. Edit `DATASETS_TO_RUN` near the bottom of `gen.py` to pick which datasets to run.
+4. Run:
 
 ```bash
 python gen.py
@@ -45,49 +85,30 @@ python gen.py
 
 ## Output
 
-- `result.txt`: Contains detailed runtime logs and MAE scores for each feature and method.
-- `testname.md`: A markdown summary table generated by `draw_feature_table()` comparing:
-  - scikit-learn,
-  - LightGBM,
-  - Our C++ algorithm.
-- Also saved a copy in `.xlsx` format
+- `result.txt`: Detailed runtime logs and MAE scores for each feature and method, across all datasets run.
+- `{test_name}.md` / `.xlsx` per dataset (e.g. `diamonds_42225.md`): a summary table comparing scikit-learn, LightGBM, and the paper's C++ algorithm for each feature of that dataset.
+- `table2_reproduction.md` / `.xlsx`: combined table across every dataset run in the same call, in the same layout as the paper's Table 2 (with an added `dataset` column).
 
 ## Customization Options
 
-- Modify **lines 284–285** in `gen.py` to change the data sampling size.
-- Uncomment **lines 304–305** to enable:
-  - `draw_figure()`: draw runtime plots.
-  - `draw_table()`: draw per-feature tables across scales.
-- By default, if `sklearn` takes too long on large datasets, the script will return a placeholder runtime of `1000s`. You can change this cutoff on **line 20**.
+- Modify `now_n` inside `run_dataset()` in `gen.py` to try different data sizes instead of the full dataset.
+- Uncomment the `draw_figure()` / `draw_table()` calls (commented out inside `run_dataset()`) to also get per-scale runtime plots/tables.
 
 ## ARFF Format Compatibility Notes
 
-Some ARFF files need manual preprocessing:
-
-- **Openml ID 42225**: Replace `'Very Good'` with `Very Good` (remove quotes) to avoid parser errors.
-- **Openml ID 40753**: Convert to `.csv` format before loading, as `loadarff()` does not support string-type features.
+- **OpenML ID 42225** (diamonds): the raw ARFF needs `'Very Good'` replaced with `Very Good` (quotes removed) to avoid parser errors — already fixed in the committed `dataset_42225.arff`.
+- **OpenML ID 40753** (delays_zurich_transport): handled automatically by `_load_arff_mixed` in `gen.py`, no manual conversion needed (see Notes above).
 
 ## Python Dependencies
 
-The following Python packages are required:
-
-```python
-import numpy as np 
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator, FuncFormatter
-import lightgbm as lgb
-from sklearn.tree import DecisionTreeRegressor
-from scipy.io import arff
-import os
-import time
-import random
+```bash
+pip install numpy pandas matplotlib lightgbm scipy tabulate openpyxl
 ```
 
-Install dependencies via pip:
+Plus a nightly build of scikit-learn (>=1.10.dev) for `DecisionTreeRegressor(categorical_features=...)`:
 
 ```bash
-pip install numpy pandas matplotlib lightgbm scikit-learn scipy
+pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple scikit-learn
 ```
 
 ## License

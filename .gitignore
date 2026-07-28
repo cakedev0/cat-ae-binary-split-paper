@@ -1,0 +1,12 @@
+# Datasets - download separately, see README.md
+dataset_*.arff
+WineQT.csv
+wine.zip
+predict_droughts.csv
+
+# Scratch files produced by running gen.py
+cpp_result.txt
+tmp_data.txt
+
+__pycache__/
+*.pyc
